@@ -1,799 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>My modified three.js app</title>
     <style>
-        canvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-            appearance: none;
-        }
-
-        #newWindow {
-            display: block;
-            position: absolute;
-            bottom: 0.3em;
-            left: 0.5em;
-            color: #fff;
-        }
+        body { margin: 0; background-color: #f0f0f0; }
     </style>
 </head>
 <body>
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "../../build/three.module.js",
-                "three/addons/": "../../examples/jsm/"
-            }
+<script type="module">
+    import * as THREE from 'https://cdn.jsdelivr.net/npm/three/build/three.module.js';
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera( 80, window.innerWidth / window.innerHeight, 0.1, 1000 );
+
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setSize( window.innerWidth, window.innerHeight );
+    document.body.appendChild( renderer.domElement );
+
+    const cubeGeometry = new THREE.BoxGeometry( 1, 1, 1 );
+    let cubeMaterial = new THREE.MeshPhongMaterial( { color: 0x00ff00 } );
+    const cube = new THREE.Mesh( cubeGeometry, cubeMaterial );
+    cube.position.set(-3, 0, 0);
+    scene.add( cube );
+
+    const heartShape = new THREE.Shape();
+    heartShape.moveTo( 0, 0 );
+    heartShape.bezierCurveTo( 2, 2, 1, 0, 0, -2 );
+    heartShape.bezierCurveTo( -2, 2, -1, 0, 0, 0 );
+    const heartGeometry = new THREE.ExtrudeGeometry( heartShape, { depth: 1, bevelEnabled: true, bevelThickness: 0.1, bevelSize: 0.1, bevelSegments: 10, curveSegments: 30 } );
+    let heartMaterial = new THREE.MeshPhongMaterial( { color: 0xff0000 } );
+    const heart = new THREE.Mesh( heartGeometry, heartMaterial );
+    heart.position.set(4, 0, 0);
+    scene.add( heart );
+
+    const cylinderGeometry = new THREE.CylinderGeometry( 0.5, 0.5, 2, 32 );
+    let cylinderMaterial = new THREE.MeshPhongMaterial( { color: 0x0000ff } );
+    const cylinder = new THREE.Mesh( cylinderGeometry, cylinderMaterial );
+    cylinder.position.set(0, 3, 0);
+    scene.add( cylinder );
+
+    const torusGeometry = new THREE.TorusGeometry( 1, 0.4, 16, 100 );
+    let torusMaterial = new THREE.MeshPhongMaterial( { color: 0xffff00 } );
+    const torus = new THREE.Mesh( torusGeometry, torusMaterial );
+    torus.position.set(0, -3, 0);
+    scene.add( torus );
+
+    const dodecahedronGeometry = new THREE.DodecahedronGeometry( 1, 0 );
+    let dodecahedronMaterial = new THREE.MeshPhongMaterial( { color: 0xff00ff } );
+    const dodecahedron = new THREE.Mesh( dodecahedronGeometry, dodecahedronMaterial );
+    dodecahedron.position.set(-0, -0, 0);
+    scene.add( dodecahedron );
+
+    const planeGeometry = new THREE.PlaneGeometry( 10, 10, 10, 10 );
+    const planeMaterial = new THREE.MeshStandardMaterial( { color: 0xffffff, side: THREE.DoubleSide } );
+    const plane = new THREE.Mesh( planeGeometry, planeMaterial );
+    plane.rotation.x = Math.PI / 2;
+    scene.add( plane );
+
+    const ambientLight = new THREE.AmbientLight( 0xffffff, 0.70 );
+    scene.add( ambientLight );
+
+    const directionalLight = new THREE.DirectionalLight( 0xffffff, 0.5 );
+    directionalLight.position.set( 1, 4, 1 );
+    scene.add( directionalLight );
+
+    camera.position.z = 10;
+
+    let isDragging = false;
+    let isRightClicking = false;
+    let isLeftClicking = false;
+    let previousMousePosition = {
+        x: 0,
+        y: 0
+    };
+
+    let targetCameraZ = camera.position.z;
+    let targetCameraRotation = {
+        x: camera.rotation.x,
+        y: camera.rotation.y
+    };
+
+    function onMouseDown(event) {
+        event.preventDefault();
+        if (event.button === 0) { // Left mouse button
+            isDragging = true;
+            previousMousePosition.x = event.clientX;
+            previousMousePosition.y = event.clientY;
+        } else if (event.button === 2) { // Right mouse button
+            isRightClicking = true;
+            previousMousePosition.x = event.clientX;
+            previousMousePosition.y = event.clientY;
         }
-    </script>
+    }
 
-    <a id="newWindow" href="https://threejs.org/docs/scenes/geometry-browser.html#BoxGeometry" target="_blank">Open in New Window</a>
+    function onMouseMove(event) {
+        event.preventDefault();
+        if (isDragging) {
+            const deltaMove = {
+                x: event.clientX - previousMousePosition.x,
+                y: event.clientY - previousMousePosition.y
+            };
 
-    <script type="module">
-        import {
-            BoxGeometry,
-            BufferGeometry,
-            CapsuleGeometry,
-            CircleGeometry,
-            Color,
-            ConeGeometry,
-            Curve,
-            CylinderGeometry,
-            DirectionalLight,
-            DodecahedronGeometry,
-            DoubleSide,
-            ExtrudeGeometry,
-            Float32BufferAttribute,
-            Group,
-            IcosahedronGeometry,
-            LatheGeometry,
-            LineSegments,
-            LineBasicMaterial,
-            Mesh,
-            MeshPhongMaterial,
-            OctahedronGeometry,
-            PerspectiveCamera,
-            PlaneGeometry,
-            RingGeometry,
-            Scene,
-            Shape,
-            ShapeGeometry,
-            SphereGeometry,
-            TetrahedronGeometry,
-            TorusGeometry,
-            TorusKnotGeometry,
-            TubeGeometry,
-            Vector2,
-            Vector3,
-            WireframeGeometry,
-            WebGLRenderer
-        } from 'three';
+            // Smoothly adjust the target rotation
+            targetCameraRotation.y += deltaMove.x * 0.01;
+            targetCameraRotation.x += deltaMove.y * 0.01;
 
-        import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
-        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+            previousMousePosition = {
+                x: event.clientX,
+                y: event.clientY
+            };
+        } else if (isRightClicking) {
+            const deltaMove = {
+                x: event.movementX,
+                y: event.movementY
+            };
 
-        const twoPi = Math.PI * 2;
-
-        class CustomSinCurve extends Curve {
-
-            constructor( scale = 1 ) {
-
-                super();
-
-                this.scale = scale;
-
-            }
-
-            getPoint( t, optionalTarget = new Vector3() ) {
-
-                const tx = t * 3 - 1.5;
-                const ty = Math.sin( 2 * Math.PI * t );
-                const tz = 0;
-
-                return optionalTarget.set( tx, ty, tz ).multiplyScalar( this.scale );
-
-            }
-
+            // Smoothly adjust the target rotation
+            targetCameraRotation.y += deltaMove.x * 0.01;
+            targetCameraRotation.x += deltaMove.y * 0.01;
         }
+    }
 
-        function updateGroupGeometry( mesh, geometry ) {
-
-            mesh.children[ 0 ].geometry.dispose();
-            mesh.children[ 1 ].geometry.dispose();
-
-            mesh.children[ 0 ].geometry = new WireframeGeometry( geometry );
-            mesh.children[ 1 ].geometry = geometry;
-
-            // these do not update nicely together if shared
-
+    function onMouseUp(event) {
+        event.preventDefault();
+        if (event.button === 0) { // Left mouse button
+            isDragging = false;
+        } else if (event.button === 2) { // Right mouse button
+            isRightClicking = false;
         }
-
-        // heart shape
-
-        const x = 0, y = 0;
-
-        const heartShape = new Shape();
-
-        heartShape.moveTo( x + 5, y + 5 );
-        heartShape.bezierCurveTo( x + 5, y + 5, x + 4, y, x, y );
-        heartShape.bezierCurveTo( x - 6, y, x - 6, y + 7, x - 6, y + 7 );
-        heartShape.bezierCurveTo( x - 6, y + 11, x - 3, y + 15.4, x + 5, y + 19 );
-        heartShape.bezierCurveTo( x + 12, y + 15.4, x + 16, y + 11, x + 16, y + 7 );
-        heartShape.bezierCurveTo( x + 16, y + 7, x + 16, y, x + 10, y );
-        heartShape.bezierCurveTo( x + 7, y, x + 5, y + 5, x + 5, y + 5 );
-
-        const guis = {
-
-            BoxGeometry: function ( mesh ) {
-
-                const data = {
-                    width: 15,
-                    height: 15,
-                    depth: 15,
-                    widthSegments: 1,
-                    heightSegments: 1,
-                    depthSegments: 1
-                };
-
-                function generateGeometry() {
-
-                    updateGroupGeometry( mesh,
-                        new BoxGeometry(
-                            data.width, data.height, data.depth, data.widthSegments, data.heightSegments, data.depthSegments
-                        )
-                    );
-
-                }
-
-                const folder = gui.addFolder( 'THREE.BoxGeometry' );
-
-                folder.add( data, 'width', 1, 30 ).onChange( generateGeometry );
-                folder.add( data, 'height', 1, 30 ).onChange( generateGeometry );
-                folder.add( data, 'depth', 1, 30 ).onChange( generateGeometry );
-                folder.add( data, 'widthSegments', 1, 10 ).step( 1 ).onChange( generateGeometry );
-                folder.add( data, 'heightSegments', 1, 10 ).step( 1 ).onChange( generateGeometry );
-                folder.add( data, 'depthSegments', 1, 10 ).step( 1 ).onChange( generateGeometry );
-
-                generateGeometry();
-
-            },
-
-            CapsuleGeometry: function ( mesh ) {
-
-                const data = {
-                    radius: 5,
-                    length: 5,
-                    capSegments: 10,
-                    radialSegments: 20
-                };
-
-                function generateGeometry() {
-
-                    updateGroupGeometry( mesh,
-                        new CapsuleGeometry( data.radius, data.length, data.capSegments, data.radialSegments ),
-                    );
-
-                }
-
-                const folder = gui.addFolder( 'THREE.CapsuleGeometry' );
-
-                folder.add( data, 'radius', 1, 30 ).onChange( generateGeometry );
-                folder.add( data, 'length', 1, 30 ).onChange( generateGeometry );
-                folder.add( data, 'capSegments', 1, 32 ).step( 1 ).onChange( generateGeometry );
-                folder.add( data, 'radialSegments', 1, 64 ).step( 1 ).onChange( generateGeometry );
-
-                generateGeometry();
-
-            },
-
-            CylinderGeometry: function ( mesh ) {
-
-                const data = {
-                    radiusTop: 5,
-                    radiusBottom: 5,
-                    height: 10,
-                    radialSegments: 8,
-                    heightSegments: 1,
-                    openEnded: false,
-                    thetaStart: 0,
-                    thetaLength: twoPi
-                };
-
-                function generateGeometry() {
-
-                    updateGroupGeometry( mesh,
-                        new CylinderGeometry(
-                            data.radiusTop,
-                            data.radiusBottom,
-                            data.height,
-                            data.radialSegments,
-                            data.heightSegments,
-                            data.openEnded,
-                            data.thetaStart,
-                            data.thetaLength
-                        )
-                    );
-
-                }
-
-                const folder = gui.addFolder( 'THREE.CylinderGeometry' );
-
-                folder.add( data, 'radiusTop', 0, 30 ).onChange( generateGeometry );
-                folder.add( data, 'radiusBottom', 0, 30 ).onChange( generateGeometry );
-                folder.add( data, 'height', 1, 50 ).onChange( generateGeometry );
-                folder.add( data, 'radialSegments', 3, 64 ).step( 1 ).onChange( generateGeometry );
-                folder.add( data, 'heightSegments', 1, 64 ).step( 1 ).onChange( generateGeometry );
-                folder.add( data, 'openEnded' ).onChange( generateGeometry );
-                folder.add( data, 'thetaStart', 0, twoPi ).onChange( generateGeometry );
-                folder.add( data, 'thetaLength', 0, twoPi ).onChange( generateGeometry );
-
-
-                generateGeometry();
-
-            },
-
-            ConeGeometry: function ( mesh ) {
-
-                const data = {
-                    radius: 5,
-                    height: 10,
-                    radialSegments: 8,
-                    heightSegments: 1,
-                    openEnded: false,
-                    thetaStart: 0,
-                    thetaLength: twoPi
-                };
-
-                function generateGeometry() {
-
-                    updateGroupGeometry( mesh,
-                        new ConeGeometry(
-                            data.radius,
-                            data.height,
-                            data.radialSegments,
-                            data.heightSegments,
-                            data.openEnded,
-                            data.thetaStart,
-                            data.thetaLength
-                        )
-                    );
-
-                }
-
-                const folder = gui.addFolder( 'THREE.ConeGeometry' );
-
-                folder.add( data, 'radius', 0, 30 ).onChange( generateGeometry );
-                folder.add( data, 'height', 1, 50 ).onChange( generateGeometry );
-                folder.add( data, 'radialSegments', 3, 64 ).step( 1 ).onChange( generateGeometry );
-                folder.add( data, 'heightSegments', 1, 64 ).step( 1 ).onChange( generateGeometry );
-                folder.add( data, 'openEnded' ).onChange( generateGeometry );
-                folder.add( data, 'thetaStart', 0, twoPi ).onChange( generateGeometry );
-                folder.add( data, 'thetaLength', 0, twoPi ).onChange( generateGeometry );
-
-
-                generateGeometry();
-
-            },
-
-            CircleGeometry: function ( mesh ) {
-
-                const data = {
-                    radius: 10,
-                    segments: 32,
-                    thetaStart: 0,
-                    thetaLength: twoPi
-                };
-
-                function generateGeometry() {
-
-                    updateGroupGeometry( mesh,
-                        new CircleGeometry(
-                            data.radius, data.segments, data.thetaStart, data.thetaLength
-                        )
-                    );
-
-                }
-
-                const folder = gui.addFolder( 'THREE.CircleGeometry' );
-
-                folder.add( data, 'radius', 1, 20 ).onChange( generateGeometry );
-                folder.add( data, 'segments', 0, 128 ).step( 1 ).onChange( generateGeometry );
-                folder.add( data, 'thetaStart', 0, twoPi ).onChange( generateGeometry );
-                folder.add( data, 'thetaLength', 0, twoPi ).onChange( generateGeometry );
-
-                generateGeometry();
-
-            },
-
-            DodecahedronGeometry: function ( mesh ) {
-
-                const data = {
-                    radius: 10,
-                    detail: 0
-                };
-
-                function generateGeometry() {
-
-                    updateGroupGeometry( mesh,
-                        new DodecahedronGeometry(
-                            data.radius, data.detail
-                        )
-                    );
-
-                }
-
-                const folder = gui.addFolder( 'THREE.DodecahedronGeometry' );
-
-                folder.add( data, 'radius', 1, 20 ).onChange( generateGeometry );
-                folder.add( data, 'detail', 0, 5 ).step( 1 ).onChange( generateGeometry );
-
-                generateGeometry();
-
-            },
-
-            IcosahedronGeometry: function ( mesh ) {
-
-                const data = {
-                    radius: 10,
-                    detail: 0
-                };
-
-                function generateGeometry() {
-
-                    updateGroupGeometry( mesh,
-                        new IcosahedronGeometry(
-                            data.radius, data.detail
-                        )
-                    );
-
-                }
-
-                const folder = gui.addFolder( 'THREE.IcosahedronGeometry' );
-
-                folder.add( data, 'radius', 1, 20 ).onChange( generateGeometry );
-                folder.add( data, 'detail', 0, 5 ).step( 1 ).onChange( generateGeometry );
-
-                generateGeometry();
-
-            },
-
-            LatheGeometry: function ( mesh ) {
-
-                const points = [];
-
-                for ( let i = 0; i < 10; i ++ ) {
-
-                    points.push( new Vector2( Math.sin( i * 0.2 ) * 10 + 5, ( i - 5 ) * 2 ) );
-
-                }
-
-                const data = {
-                    segments: 12,
-                    phiStart: 0,
-                    phiLength: twoPi
-                };
-
-                function generateGeometry() {
-
-                    const geometry = new LatheGeometry(
-                        points, data.segments, data.phiStart, data.phiLength
-                    );
-
-                    updateGroupGeometry( mesh, geometry );
-
-                }
-
-                const folder = gui.addFolder( 'THREE.LatheGeometry' );
-
-                folder.add( data, 'segments', 1, 30 ).step( 1 ).onChange( generateGeometry );
-                folder.add( data, 'phiStart', 0, twoPi ).onChange( generateGeometry );
-                folder.add( data, 'phiLength', 0, twoPi ).onChange( generateGeometry );
-
-                generateGeometry();
-
-            },
-
-            OctahedronGeometry: function ( mesh ) {
-
-                const data = {
-                    radius: 10,
-                    detail: 0
-                };
-
-                function generateGeometry() {
-
-                    updateGroupGeometry( mesh,
-                        new OctahedronGeometry(
-                            data.radius, data.detail
-                        )
-                    );
-
-                }
-
-                const folder = gui.addFolder( 'THREE.OctahedronGeometry' );
-
-                folder.add( data, 'radius', 1, 20 ).onChange( generateGeometry );
-                folder.add( data, 'detail', 0, 5 ).step( 1 ).onChange( generateGeometry );
-
-                generateGeometry();
-
-            },
-
-            PlaneGeometry: function ( mesh ) {
-
-                const data = {
-                    width: 10,
-                    height: 10,
-                    widthSegments: 1,
-                    heightSegments: 1
-                };
-
-                function generateGeometry() {
-
-                    updateGroupGeometry( mesh,
-                        new PlaneGeometry(
-                            data.width, data.height, data.widthSegments, data.heightSegments
-                        )
-                    );
-
-                }
-
-                const folder = gui.addFolder( 'THREE.PlaneGeometry' );
-
-                folder.add( data, 'width', 1, 30 ).onChange( generateGeometry );
-                folder.add( data, 'height', 1, 30 ).onChange( generateGeometry );
-                folder.add( data, 'widthSegments', 1, 30 ).step( 1 ).onChange( generateGeometry );
-                folder.add( data, 'heightSegments', 1, 30 ).step( 1 ).onChange( generateGeometry );
-
-                generateGeometry();
-
-            },
-
-            RingGeometry: function ( mesh ) {
-
-                const data = {
-                    innerRadius: 5,
-                    outerRadius: 10,
-                    thetaSegments: 8,
-                    phiSegments: 8,
-                    thetaStart: 0,
-                    thetaLength: twoPi
-                };
-
-                function generateGeometry() {
-
-                    updateGroupGeometry( mesh,
-                        new RingGeometry(
-                            data.innerRadius, data.outerRadius, data.thetaSegments, data.phiSegments, data.thetaStart, data.thetaLength
-                        )
-                    );
-
-                }
-
-                const folder = gui.addFolder( 'THREE.RingGeometry' );
-
-                folder.add( data, 'innerRadius', 1, 30 ).onChange( generateGeometry );
-                folder.add( data, 'outerRadius', 1, 30 ).onChange( generateGeometry );
-                folder.add( data, 'thetaSegments', 1, 30 ).step( 1 ).onChange( generateGeometry );
-                folder.add( data, 'phiSegments', 1, 30 ).step( 1 ).onChange( generateGeometry );
-                folder.add( data, 'thetaStart', 0, twoPi ).onChange( generateGeometry );
-                folder.add( data, 'thetaLength', 0, twoPi ).onChange( generateGeometry );
-
-                generateGeometry();
-
-            },
-
-            SphereGeometry: function ( mesh ) {
-
-                const data = {
-                    radius: 15,
-                    widthSegments: 32,
-                    heightSegments: 16,
-                    phiStart: 0,
-                    phiLength: twoPi,
-                    thetaStart: 0,
-                    thetaLength: Math.PI
-                };
-
-                function generateGeometry() {
-
-                    updateGroupGeometry( mesh,
-                        new SphereGeometry(
-                            data.radius, data.widthSegments, data.heightSegments, data.phiStart, data.phiLength, data.thetaStart, data.thetaLength
-                        )
-                    );
-
-                }
-
-                const folder = gui.addFolder( 'THREE.SphereGeometry' );
-
-                folder.add( data, 'radius', 1, 30 ).onChange( generateGeometry );
-                folder.add( data, 'widthSegments', 3, 64 ).step( 1 ).onChange( generateGeometry );
-                folder.add( data, 'heightSegments', 2, 32 ).step( 1 ).onChange( generateGeometry );
-                folder.add( data, 'phiStart', 0, twoPi ).onChange( generateGeometry );
-                folder.add( data, 'phiLength', 0, twoPi ).onChange( generateGeometry );
-                folder.add( data, 'thetaStart', 0, twoPi ).onChange( generateGeometry );
-                folder.add( data, 'thetaLength', 0, twoPi ).onChange( generateGeometry );
-
-                generateGeometry();
-
-            },
-
-            TetrahedronGeometry: function ( mesh ) {
-
-                const data = {
-                    radius: 10,
-                    detail: 0
-                };
-
-                function generateGeometry() {
-
-                    updateGroupGeometry( mesh,
-                        new TetrahedronGeometry(
-                            data.radius, data.detail
-                        )
-                    );
-
-                }
-
-                const folder = gui.addFolder( 'THREE.TetrahedronGeometry' );
-
-                folder.add( data, 'radius', 1, 20 ).onChange( generateGeometry );
-                folder.add( data, 'detail', 0, 5 ).step( 1 ).onChange( generateGeometry );
-
-                generateGeometry();
-
-            },
-
-            TorusGeometry: function ( mesh ) {
-
-                const data = {
-                    radius: 10,
-                    tube: 3,
-                    radialSegments: 16,
-                    tubularSegments: 100,
-                    arc: twoPi
-                };
-
-                function generateGeometry() {
-
-                    updateGroupGeometry( mesh,
-                        new TorusGeometry(
-                            data.radius, data.tube, data.radialSegments, data.tubularSegments, data.arc
-                        )
-                    );
-
-                }
-
-                const folder = gui.addFolder( 'THREE.TorusGeometry' );
-
-                folder.add( data, 'radius', 1, 20 ).onChange( generateGeometry );
-                folder.add( data, 'tube', 0.1, 10 ).onChange( generateGeometry );
-                folder.add( data, 'radialSegments', 2, 30 ).step( 1 ).onChange( generateGeometry );
-                folder.add( data, 'tubularSegments', 3, 200 ).step( 1 ).onChange( generateGeometry );
-                folder.add( data, 'arc', 0.1, twoPi ).onChange( generateGeometry );
-
-                generateGeometry();
-
-            },
-
-            TorusKnotGeometry: function ( mesh ) {
-
-                const data = {
-                    radius: 10,
-                    tube: 3,
-                    tubularSegments: 64,
-                    radialSegments: 8,
-                    p: 2,
-                    q: 3
-                };
-
-                function generateGeometry() {
-
-                    updateGroupGeometry( mesh,
-                        new TorusKnotGeometry(
-                            data.radius, data.tube, data.tubularSegments, data.radialSegments,
-                            data.p, data.q
-                        )
-                    );
-
-                }
-
-                const folder = gui.addFolder( 'THREE.TorusKnotGeometry' );
-
-                folder.add( data, 'radius', 1, 20 ).onChange( generateGeometry );
-                folder.add( data, 'tube', 0.1, 10 ).onChange( generateGeometry );
-                folder.add( data, 'tubularSegments', 3, 300 ).step( 1 ).onChange( generateGeometry );
-                folder.add( data, 'radialSegments', 3, 20 ).step( 1 ).onChange( generateGeometry );
-                folder.add( data, 'p', 1, 20 ).step( 1 ).onChange( generateGeometry );
-                folder.add( data, 'q', 1, 20 ).step( 1 ).onChange( generateGeometry );
-
-                generateGeometry();
-
-            },
-
-            TubeGeometry: function ( mesh ) {
-
-                const data = {
-                    segments: 20,
-                    radius: 2,
-                    radialSegments: 8
-                };
-
-                const path = new CustomSinCurve( 10 );
-
-                function generateGeometry() {
-
-                    updateGroupGeometry( mesh,
-                        new TubeGeometry( path, data.segments, data.radius, data.radialSegments, false )
-                    );
-
-                }
-
-                const folder = gui.addFolder( 'THREE.TubeGeometry' );
-
-                folder.add( data, 'segments', 1, 100 ).step( 1 ).onChange( generateGeometry );
-                folder.add( data, 'radius', 1, 10 ).onChange( generateGeometry );
-                folder.add( data, 'radialSegments', 1, 20 ).step( 1 ).onChange( generateGeometry );
-
-                generateGeometry();
-
-            },
-
-            ShapeGeometry: function ( mesh ) {
-
-                const data = {
-                    segments: 12
-                };
-
-                function generateGeometry() {
-
-                    const geometry = new ShapeGeometry( heartShape, data.segments );
-                    geometry.center();
-
-                    updateGroupGeometry( mesh, geometry );
-
-                }
-
-                const folder = gui.addFolder( 'THREE.ShapeGeometry' );
-                folder.add( data, 'segments', 1, 100 ).step( 1 ).onChange( generateGeometry );
-
-                generateGeometry();
-
-            },
-
-            ExtrudeGeometry: function ( mesh ) {
-
-                const data = {
-                    steps: 2,
-                    depth: 16,
-                    bevelEnabled: true,
-                    bevelThickness: 1,
-                    bevelSize: 1,
-                    bevelOffset: 0,
-                    bevelSegments: 1
-                };
-
-                const length = 12, width = 8;
-
-                const shape = new Shape();
-                shape.moveTo( 0, 0 );
-                shape.lineTo( 0, width );
-                shape.lineTo( length, width );
-                shape.lineTo( length, 0 );
-                shape.lineTo( 0, 0 );
-
-                function generateGeometry() {
-
-                    const geometry = new ExtrudeGeometry( shape, data );
-                    geometry.center();
-
-                    updateGroupGeometry( mesh, geometry );
-
-                }
-
-                const folder = gui.addFolder( 'THREE.ExtrudeGeometry' );
-
-                folder.add( data, 'steps', 1, 10 ).step( 1 ).onChange( generateGeometry );
-                folder.add( data, 'depth', 1, 20 ).onChange( generateGeometry );
-                folder.add( data, 'bevelThickness', 1, 5 ).step( 1 ).onChange( generateGeometry );
-                folder.add( data, 'bevelSize', 0, 5 ).step( 1 ).onChange( generateGeometry );
-                folder.add( data, 'bevelOffset', - 4, 5 ).step( 1 ).onChange( generateGeometry );
-                folder.add( data, 'bevelSegments', 1, 5 ).step( 1 ).onChange( generateGeometry );
-
-                generateGeometry();
-
-            }
-
-        };
-
-        function chooseFromHash( mesh ) {
-
-            const selectedGeometry = window.location.hash.substring( 1 ) || 'TorusGeometry';
-
-            if ( guis[ selectedGeometry ] !== undefined ) {
-
-                guis[ selectedGeometry ]( mesh );
-
-            }
-
+    }
+
+    function onMouseWheel(event) {
+        event.preventDefault();
+        // Adjust the target camera position based on the amount of scroll
+        targetCameraZ += event.deltaY * 0.1;
+    }
+
+    function onKeyPress(event) {
+        if (event.key === 'c' || event.key === 'C') {
+            changeObjectColors();
+        }
+    }
+
+    function changeObjectColors() {
+        // Change the colors of the objects to random colors
+        cubeMaterial.color.setHex( Math.random() * 0xffffff );
+        heartMaterial.color.setHex( Math.random() * 0xffffff );
+        cylinderMaterial.color.setHex( Math.random() * 0xffffff );
+        torusMaterial.color.setHex( Math.random() * 0xffffff );
+        dodecahedronMaterial.color.setHex( Math.random() * 0xffffff );
+    }
+
+    let lastColorChangeTime = Date.now();
+
+    function animate() {
+        requestAnimationFrame( animate );
+
+        // Smoothly move the camera towards the target position
+        camera.position.z += (targetCameraZ - camera.position.z) * 0.05;
+
+        // Smoothly adjust the camera rotation towards the target rotation
+        camera.rotation.x += (targetCameraRotation.x - camera.rotation.x) * 0.05;
+        camera.rotation.y += (targetCameraRotation.y - camera.rotation.y) * 0.05;
+
+        cube.rotation.x += 0.01;
+        cube.rotation.y += 0.01;
+        cube.rotation.z += 0.01;
+        heart.rotation.y -= 0.01;
+        heart.rotation.x -= 0.01;
+        heart.rotation.z -= 0.02;
+        cylinder.rotation.x += 0.02;
+        cylinder.rotation.z += 0.02;
+        cylinder.rotation.y += 0.02;
+        torus.rotation.y += 0.02;
+        dodecahedron.rotation.x -= 0.050;
+        dodecahedron.rotation.y -= 0.010;
+
+        // Change object colors every 3 seconds
+        if (Date.now() - lastColorChangeTime > 500) {
+            changeObjectColors();
+            lastColorChangeTime = Date.now();
         }
 
-        //
+        renderer.render( scene, camera );
+    }
 
-        const selectedGeometry = window.location.hash.substring( 1 );
+    window.addEventListener('mousedown', onMouseDown, false);
+    window.addEventListener('mousemove', onMouseMove, false);
+    window.addEventListener('mouseup', onMouseUp, false);
+    window.addEventListener('wheel', onMouseWheel, false);
+    window.addEventListener('keypress', onKeyPress, false);
 
-        if ( guis[ selectedGeometry ] !== undefined ) {
-
-            document.getElementById( 'newWindow' ).href += '#' + selectedGeometry;
-
-        }
-
-        const gui = new GUI();
-
-        const scene = new Scene();
-        scene.background = new Color( 0x444444 );
-
-        const camera = new PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 50 );
-        camera.position.z = 30;
-
-        const renderer = new WebGLRenderer( { antialias: true } );
-        renderer.setPixelRatio( window.devicePixelRatio );
-        renderer.setSize( window.innerWidth, window.innerHeight );
-        document.body.appendChild( renderer.domElement );
-
-        const orbit = new OrbitControls( camera, renderer.domElement );
-        orbit.enableZoom = false;
-
-        const lights = [];
-        lights[ 0 ] = new DirectionalLight( 0xffffff, 3 );
-        lights[ 1 ] = new DirectionalLight( 0xffffff, 3 );
-        lights[ 2 ] = new DirectionalLight( 0xffffff, 3 );
-
-        lights[ 0 ].position.set( 0, 200, 0 );
-        lights[ 1 ].position.set( 100, 200, 100 );
-        lights[ 2 ].position.set( - 100, - 200, - 100 );
-
-        scene.add( lights[ 0 ] );
-        scene.add( lights[ 1 ] );
-        scene.add( lights[ 2 ] );
-
-        const group = new Group();
-
-        const geometry = new BufferGeometry();
-        geometry.setAttribute( 'position', new Float32BufferAttribute( [], 3 ) );
-
-        const lineMaterial = new LineBasicMaterial( { color: 0xffffff, transparent: true, opacity: 0.5 } );
-        const meshMaterial = new MeshPhongMaterial( { color: 0x156289, emissive: 0x072534, side: DoubleSide, flatShading: true } );
-
-        group.add( new LineSegments( geometry, lineMaterial ) );
-        group.add( new Mesh( geometry, meshMaterial ) );
-
-        chooseFromHash( group );
-
-        scene.add( group );
-
-        function render() {
-
-            requestAnimationFrame( render );
-
-            group.rotation.x += 0.005;
-            group.rotation.y += 0.005;
-
-            renderer.render( scene, camera );
-
-        }
-
-        window.addEventListener( 'resize', function () {
-
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-
-            renderer.setSize( window.innerWidth, window.innerHeight );
-
-        }, false );
-
-        render();
-
-    </script>
-
-
-<div class="lil-gui allow-touch-styles root autoPlace"><div class="title" role="button" aria-expanded="true" tabindex="0">Controls</div><div class="children"><div class="lil-gui allow-touch-styles"><div class="title" role="button" aria-expanded="true" tabindex="0">THREE.BoxGeometry</div><div class="children"><div class="controller number hasSlider"><div class="name" id="lil-gui-name-1">width</div><div class="widget"><div class="slider"><div class="fill" style="width: 48.2759%;"></div></div><input type="number" step="any" aria-labelledby="lil-gui-name-1"></div></div><div class="controller number hasSlider"><div class="name" id="lil-gui-name-2">height</div><div class="widget"><div class="slider"><div class="fill" style="width: 48.2759%;"></div></div><input type="number" step="any" aria-labelledby="lil-gui-name-2"></div></div><div class="controller number hasSlider"><div class="name" id="lil-gui-name-3">depth</div><div class="widget"><div class="slider"><div class="fill" style="width: 48.2759%;"></div></div><input type="number" step="any" aria-labelledby="lil-gui-name-3"></div></div><div class="controller number hasSlider"><div class="name" id="lil-gui-name-4">widthSegments</div><div class="widget"><div class="slider"><div class="fill" style="width: 0%;"></div></div><input type="number" step="any" aria-labelledby="lil-gui-name-4"></div></div><div class="controller number hasSlider"><div class="name" id="lil-gui-name-5">heightSegments</div><div class="widget"><div class="slider"><div class="fill" style="width: 0%;"></div></div><input type="number" step="any" aria-labelledby="lil-gui-name-5"></div></div><div class="controller number hasSlider"><div class="name" id="lil-gui-name-6">depthSegments</div><div class="widget"><div class="slider"><div class="fill" style="width: 0%;"></div></div><input type="number" step="any" aria-labelledby="lil-gui-name-6"></div></div></div></div></div></div><canvas data-engine="three.js r163" width="339" height="633" style="display: block; width: 339px; height: 633px; touch-action: none;"></canvas></body></html>
+    animate();
+</script>
+</body>
+</html>
