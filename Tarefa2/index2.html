@@ -166,16 +166,16 @@
 
         cube.rotation.x += 0.01;
         cube.rotation.y += 0.01;
-        cube.rotation.z += 0.01;
-        heart.rotation.y -= 0.01;
-        heart.rotation.x -= 0.01;
-        heart.rotation.z -= 0.02;
+        heart.rotation.y -= 0.05; 
+        heart.rotation.z -= 0.01;
         cylinder.rotation.x += 0.02;
-        cylinder.rotation.z += 0.02;
         cylinder.rotation.y += 0.02;
-        torus.rotation.y += 0.02;
-        dodecahedron.rotation.x -= 0.050;
-        dodecahedron.rotation.y -= 0.010;
+        cylinder.rotation.z += 0.02;
+        torus.rotation.y += 0.001;
+        torus.rotation.x += 0.02;
+        dodecahedron.rotation.x -= 0.01;
+        dodecahedron.rotation.y -= 0.01;
+        
 
         // Change object colors every 3 seconds
         if (Date.now() - lastColorChangeTime > 500) {
