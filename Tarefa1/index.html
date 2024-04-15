@@ -1,109 +1,40 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="utf-8">
-    <title>My first three.js app</title>
-    <style>
-        body { margin: 0; }
-    </style>
-</head>
-<body>
-<script type="module">
-    import * as THREE from 'https://cdn.jsdelivr.net/npm/three/build/three.module.js';
+	<head>
+		<meta charset="utf-8">
+		<title>My first three.js app</title>
+		<style>
+			body { margin: 0; }
+		</style>
+	</head>
+	<body>
+		<script type="module">
+			import * as THREE from 'https://cdn.jsdelivr.net/npm/three/build/three.module.js';
 
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+			const scene = new THREE.Scene();
+			const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
 
-    const renderer = new THREE.WebGLRenderer();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
+			const renderer = new THREE.WebGLRenderer();
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			document.body.appendChild( renderer.domElement );
 
-    // Posição inicial do primeiro cubo
-    const initialPositionCube1 = new THREE.Vector3(0, 0, 0);
-    // Criação do primeiro cubo
-    const geometry1 = new THREE.BoxGeometry(1, 1, 1);
-    const material1 = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-    const cube1 = new THREE.Mesh(geometry1, material1);
-    cube1.position.copy(initialPositionCube1); // Posicionamento do primeiro cubo
-    scene.add(cube1);
+			const geometry = new THREE.BoxGeometry( 1, 1, 1 );
+			const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+			const cube = new THREE.Mesh( geometry, material );
+			scene.add( cube );
 
-    // Posição inicial do segundo cubo
-    const initialPositionCube2 = new THREE.Vector3(2, 0, 0);
-    // Criação do segundo cubo
-    const geometry2 = new THREE.BoxGeometry(1, 1, 1);
-    const material2 = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-    const cube2 = new THREE.Mesh(geometry2, material2);
-    cube2.position.copy(initialPositionCube2); // Posicionamento do segundo cubo
-    scene.add(cube2);
+			camera.position.z = 5;
 
-    // Posição inicial da esfera
-    const initialPositionSphere = new THREE.Vector3(-2, 0, 0);
-    // Criação da esfera
-    const geometry3 = new THREE.SphereGeometry(0.5, 32, 32);
-    const material3 = new THREE.MeshBasicMaterial({ color: 0x0000ff });
-    const sphere = new THREE.Mesh(geometry3, material3);
-    sphere.position.copy(initialPositionSphere); // Posicionamento da esfera ao lado dos cubos
-    scene.add(sphere);
+			function animate() {
+				requestAnimationFrame( animate );
 
-    // Vetores de velocidade para os objetos
-    let cube1Velocity = new THREE.Vector3(0, 0, 0);
-    let cube2Velocity = new THREE.Vector3(0, 0, 0);
-    let sphereVelocity = new THREE.Vector3(0, 0, 0);
+				cube.rotation.x += 0.01;
+				cube.rotation.y += 0.01;
 
-    camera.position.z = 5;
+				renderer.render( scene, camera );
+			}
 
-    // Função para lidar com eventos de teclado
-    function handleKeyDown(event) {
-        const keyCode = event.keyCode;
-        switch(keyCode) {
-            case 73: // Tecla 'I' - iniciar o movimento dos elementos
-                // Definir as velocidades dos objetos para iniciar o movimento
-                cube1Velocity.set(0.01, 0.01, 0);
-                cube2Velocity.set(-0.015, -0.015, 0);
-                sphereVelocity.set(0.005, -0.005, 0);
-                break;
-            case 82: // Tecla 'R' - resetar o movimento dos elementos
-                // Parar o movimento dos objetos e restaurar suas posições iniciais
-                cube1Velocity.set(0, 0, 0);
-                cube2Velocity.set(0, 0, 0);
-                sphereVelocity.set(0, 0, 0);
-                resetPositions();
-                break;
-        }
-    }
-
-    // Adicionando um ouvinte de eventos de teclado
-    document.addEventListener('keydown', handleKeyDown);
-
-    // Função para resetar as posições iniciais de todos os elementos
-    function resetPositions() {
-        cube1.position.copy(initialPositionCube1); // Restaurar posição inicial do primeiro cubo
-        cube2.position.copy(initialPositionCube2); // Restaurar posição inicial do segundo cubo
-        sphere.position.copy(initialPositionSphere); // Restaurar posição inicial da esfera
-    }
-
-    function animate() {
-        requestAnimationFrame(animate);
-
-        // Rotação dos cubos
-        cube1.rotation.x += 0.01;
-        cube1.rotation.y += 0.01;
-        cube2.rotation.x += 0.01;
-        cube2.rotation.y += 0.01;
-
-        // Movimento do primeiro cubo
-        cube1.position.add(cube1Velocity);
-
-        // Movimento do segundo cubo
-        cube2.position.add(cube2Velocity);
-
-        // Movimento da esfera
-        sphere.position.add(sphereVelocity);
-
-        renderer.render(scene, camera);
-    }
-
-    animate();
-</script>
-</body>
+			animate();
+		</script>
+	</body>
 </html>
