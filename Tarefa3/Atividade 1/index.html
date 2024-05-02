@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Aplicação 3D Interativa</title>
+    <style>
+        body { margin: 0; }
+        canvas { width: 100%; height: 100% }
+    </style>
+</head>
+<body>
+    <script src="https://threejs.org/build/three.js"></script>
+    <script src="https://www.threejsworld.com/include/THREEx.KeyboardState.js"></script>
+    <script>
+        // Criação da cena, câmera e renderizador
+        let scene = new THREE.Scene();
+        let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        let renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Criação da geometria
+        let geometry = new THREE.BoxGeometry(1, 1, 1);
+        let material = new THREE.MeshBasicMaterial({color: 0x00ff00});
+        let cube = new THREE.Mesh(geometry, material);
+        scene.add(cube);
+
+        // Posicionamento da câmera
+        camera.position.z = 5;
+
+        // Configuração do controle de movimento
+        let keyboard = new THREEx.KeyboardState();
+        let speed = 0.1;
+        let direction = new THREE.Vector3(1, 1, 0).normalize();
+
+        // Loop de animação
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Atualização do estado do teclado
+            keyboard.update();
+
+            // Controle de movimento
+            if (keyboard.pressed("left")) direction.x = -1;
+            if (keyboard.pressed("right")) direction.x = 1;
+            if (keyboard.pressed("up")) direction.y = 1;
+            if (keyboard.pressed("down")) direction.y = -1;
+
+            // Movimento contínuo da geometria
+            cube.position.add(direction.clone().multiplyScalar(speed));
+
+            // Limites da cena
+            if (Math.abs(cube.position.x) > 5) direction.x *= -1;
+            if (Math.abs(cube.position.y) > 5) direction.y *= -1;
+
+            // Renderização da cena
+            renderer.render(scene, camera);
+        }
+
+        // Iniciar a animação
+        animate();
+    </script>
+</body>
+</html>
