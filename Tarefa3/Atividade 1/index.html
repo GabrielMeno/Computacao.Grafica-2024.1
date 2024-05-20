@@ -1,63 +1,72 @@
 <!DOCTYPE html>
-<html>
-<head>
-    <title>Aplicação 3D Interativa</title>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Three.js Orbit Controls</title>
     <style>
-        body { margin: 0; }
-        canvas { width: 100%; height: 100% }
+      body {
+        margin: 0;
+      }
+
+      canvas {
+        display: block;
+      }
     </style>
-</head>
-<body>
-    <script src="https://threejs.org/build/three.js"></script>
-    <script src="https://www.threejsworld.com/include/THREEx.KeyboardState.js"></script>
+    <script type="text/javascript" src="./index.js" defer=""></script>
+    <link rel="stylesheet" href="./index.css">
+  </head>
+
+  <body>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.131.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.131.2/examples/js/controls/OrbitControls.js"></script>
     <script>
-        // Criação da cena, câmera e renderizador
-        let scene = new THREE.Scene();
-        let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        let renderer = new THREE.WebGLRenderer();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement);
+      const scene = new THREE.Scene();
 
-        // Criação da geometria
-        let geometry = new THREE.BoxGeometry(1, 1, 1);
-        let material = new THREE.MeshBasicMaterial({color: 0x00ff00});
-        let cube = new THREE.Mesh(geometry, material);
-        scene.add(cube);
+      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.set(0, 0, 5);
 
-        // Posicionamento da câmera
-        camera.position.z = 5;
+      const renderer = new THREE.WebGLRenderer();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
 
-        // Configuração do controle de movimento
-        let keyboard = new THREEx.KeyboardState();
-        let speed = 0.1;
-        let direction = new THREE.Vector3(1, 1, 0).normalize();
+      const light = new THREE.PointLight(0xfffffff, 2);
+      light.position.set(0, 0, 5);
+      scene.add(light);
 
-        // Loop de animação
-        function animate() {
-            requestAnimationFrame(animate);
+      const geometry = new THREE.BoxGeometry(1, 2, 1);
+      const material = new THREE.MeshPhongMaterial({
+        color: 0xffcbdb
+      });
+      const cube = new THREE.Mesh(geometry, material);
+      scene.add(cube);
 
-            // Atualização do estado do teclado
-            keyboard.update();
+      const controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.25;
+      controls.minDistance = 5;
+      controls.maxDistance = 15;
+      controls.maxPolarAngle = Math.PI * 0.45;
+      controls.minPolarAngle = Math.PI * 0.1;
+      controls.update();
 
-            // Controle de movimento
-            if (keyboard.pressed("left")) direction.x = -1;
-            if (keyboard.pressed("right")) direction.x = 1;
-            if (keyboard.pressed("up")) direction.y = 1;
-            if (keyboard.pressed("down")) direction.y = -1;
 
-            // Movimento contínuo da geometria
-            cube.position.add(direction.clone().multiplyScalar(speed));
+      function animate() {
+        requestAnimationFrame(animate);
 
-            // Limites da cena
-            if (Math.abs(cube.position.x) > 5) direction.x *= -1;
-            if (Math.abs(cube.position.y) > 5) direction.y *= -1;
+        cube.rotation.x += 0.01;
+        cube.rotation.y += 0.01;
 
-            // Renderização da cena
-            renderer.render(scene, camera);
-        }
+        controls.update();
 
-        // Iniciar a animação
-        animate();
+        renderer.render(scene, camera);
+      }
+
+      animate();
     </script>
-</body>
+
+
+  </body>
+
 </html>
