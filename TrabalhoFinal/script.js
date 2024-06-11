@@ -1020,17 +1020,16 @@ function resetAllTargets() {
 // ============================================================================
 // ============================================================================
 
-// Track all active fragments
+// Rastrear todos os fragmentos ativos
 const frags = [];
-// Pool inactive fragments by color, using a Map.
-// keys are color objects, and values are arrays of fragments.
-// // Also pool wireframe instances separately.
+// Agrupar fragmentos inativos por cor, usando um Map.
+// As chaves são objetos de cor, e os valores são arrays de fragmentos.
+// Também agrupar instâncias de wireframe separadamente.
 const fragPool = new Map(allColors.map(c=>([c, []])));
 const fragWireframePool = new Map(allColors.map(c=>([c, []])));
 
-
 const createBurst = (() => {
-	// Precompute some private data to be reused for all bursts.
+	// Pré-calcular alguns dados privados para serem reutilizados em todas as explosões.
 	const basePositions = mengerSpongeSplit({ x:0, y:0, z:0 }, fragRadius*2);
 	const positions = cloneVertices(basePositions);
 	const prevPositions = cloneVertices(basePositions);
@@ -1038,7 +1037,6 @@ const createBurst = (() => {
 
 	const basePositionNormals = basePositions.map(normalize);
 	const positionNormals = cloneVertices(basePositionNormals);
-
 
 	const fragCount = basePositions.length;
 
@@ -1058,8 +1056,8 @@ const createBurst = (() => {
 	}
 
 	return (target, force=1) => {
-		// Calculate fragment positions, and what would have been the previous positions
-		// when still a part of the larger target.
+		// Calcular posições dos fragmentos e quais seriam as posições anteriores
+		// quando ainda faziam parte do alvo maior.
 		transformVertices(
 			basePositions, positions,
 			target.x, target.y, target.z,
@@ -1073,8 +1071,8 @@ const createBurst = (() => {
 			1, 1, 1
 		);
 
-		// Compute velocity of each fragment, based on previous positions.
-		// Will write to `velocities` array.
+		// Calcular a velocidade de cada fragmento, com base nas posições anteriores.
+		// Escreverá no array `velocities`.
 		for (let i=0; i<fragCount; i++) {
 			const position = positions[i];
 			const prevPosition = prevPositions[i];
@@ -1085,16 +1083,13 @@ const createBurst = (() => {
 			velocity.z = position.z - prevPosition.z;
 		}
 
-
-
-		// Apply target rotation to normals
+		// Aplicar rotação do alvo aos normais
 		transformVertices(
 			basePositionNormals, positionNormals,
 			0, 0, 0,
 			target.rotateX, target.rotateY, target.rotateZ,
 			1, 1, 1
 		);
-
 
 		for (let i=0; i<fragCount; i++) {
 			const position = positions[i];
@@ -1109,7 +1104,6 @@ const createBurst = (() => {
 			frag.rotateX = target.rotateX;
 			frag.rotateY = target.rotateY;
 			frag.rotateZ = target.rotateZ;
-
 
 			const burstSpeed = 2 * force;
 			const randSpeed = 2 * force;
@@ -1126,16 +1120,11 @@ const createBurst = (() => {
 	}
 })();
 
-
 const returnFrag = frag => {
 	frag.reset();
 	const pool = frag.wireframe ? fragWireframePool : fragPool;
 	pool.get(frag.color).push(frag);
 };
-
-
-
-
 
 // sparks.js
 // ============================================================================
@@ -1143,7 +1132,6 @@ const returnFrag = frag => {
 
 const sparks = [];
 const sparkPool = [];
-
 
 function addSpark(x, y, xD, yD) {
 	const spark = sparkPool.pop() || {};
@@ -1160,8 +1148,7 @@ function addSpark(x, y, xD, yD) {
 	return spark;
 }
 
-
-// Spherical spark burst
+// Explosão esférica de faíscas
 function sparkBurst(x, y, count, maxSpeed) {
 	const angleInc = TAU / count;
 	for (let i=0; i<count; i++) {
@@ -1176,9 +1163,8 @@ function sparkBurst(x, y, count, maxSpeed) {
 	}
 }
 
-
-// Make a target "leak" sparks from all vertices.
-// This is used to create the effect of target glue "shedding".
+// Fazer um alvo "vazar" faíscas de todos os vértices.
+// Isso é usado para criar o efeito de "desprendimento" da cola do alvo.
 let glueShedVertices;
 function glueShedSparks(target) {
 	if (!glueShedVertices) {
@@ -1204,10 +1190,6 @@ function returnSpark(spark) {
 	sparkPool.push(spark);
 }
 
-
-
-
-
 // hud.js
 // ============================================================================
 // ============================================================================
@@ -1222,9 +1204,8 @@ function setHudVisibility(visible) {
 	}
 }
 
-
 ///////////
-// Score //
+// Pontuação //
 ///////////
 const scoreNode = $('.score-lbl');
 const cubeCountNode = $('.cube-count-lbl');
@@ -1243,16 +1224,14 @@ function renderScoreHud() {
 
 renderScoreHud();
 
-
 //////////////////
-// Pause Button //
+// Botão de Pausa //
 //////////////////
 
 handlePointerDown($('.pause-btn'), () => pauseGame());
 
-
 ////////////////////
-// Slow-Mo Status //
+// Status de Slow-Mo //
 ////////////////////
 
 const slowmoNode = $('.slowmo');
@@ -1263,15 +1242,11 @@ function renderSlowmoStatus(percentRemaining) {
 	slowmoBarNode.style.transform = `scaleX(${percentRemaining.toFixed(3)})`;
 }
 
-
-
-
-
 // menus.js
 // ============================================================================
 // ============================================================================
 
-// Top-level menu containers
+// Contêineres de menu de nível superior
 const menuContainerNode = $('.menus');
 const menuMainNode = $('.menu--main');
 const menuPauseNode = $('.menu--pause');
@@ -1279,8 +1254,6 @@ const menuScoreNode = $('.menu--score');
 
 const finalScoreLblNode = $('.final-score-lbl');
 const highScoreLblNode = $('.high-score-lbl');
-
-
 
 function showMenu(node) {
 	node.classList.add('active');
@@ -1317,6 +1290,7 @@ function renderMenus() {
 	menuContainerNode.classList.toggle('has-active', isMenuVisible());
 	menuContainerNode.classList.toggle('interactive-mode', isMenuVisible() && pointerIsDown);
 }
+
 
 renderMenus();
 
@@ -1432,7 +1406,7 @@ function incrementCubeCount(inc) {
 	}
 }
 
-
+// continuar daqui
 //////////////////
 // GAME ACTIONS //
 //////////////////
