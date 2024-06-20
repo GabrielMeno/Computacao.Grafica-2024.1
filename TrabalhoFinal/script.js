@@ -1406,7 +1406,6 @@ function incrementCubeCount(inc) {
 	}
 }
 
-// continuar daqui
 //////////////////
 // GAME ACTIONS //
 //////////////////
@@ -1443,7 +1442,7 @@ function endGame() {
 
 
 ////////////////////////
-// KEYBOARD SHORTCUTS //
+// ATALHOS DO TECLADO //
 ////////////////////////
 
 window.addEventListener('keydown', event => {
@@ -1503,14 +1502,14 @@ function tick(width, height, simTime, simSpeed, lag) {
 	const simAirDrag = 1 - (airDrag * simSpeed);
 	const simAirDragSpark = 1 - (airDragSpark * simSpeed);
 
-	// Pointer Tracking
-	// -------------------
+	// Rastreamento de ponteiro
+  // -------------------
 
-	// Compute speed and x/y deltas.
-	// There is also a "scaled" variant taking game speed into account. This serves two purposes:
-	//  - Lag won't create large spikes in speed/deltas
-	//  - In slow mo, speed is increased proportionately to match "reality". Without this boost,
-	//    it feels like your actions are dampened in slow mo.
+  // Calcula a velocidade e os deltas x/y.
+  // Há também uma variante "escalada" que leva em consideração a velocidade do jogo. Isso serve a dois propósitos:
+  // - Lag não criará grandes picos de velocidade/deltas
+  // - Em câmera lenta, a velocidade aumenta proporcionalmente para corresponder à "realidade". Sem esse impulso,
+  // parece que suas ações são amortecidas em câmera lenta.
 	const forceMultiplier = 1 / (simSpeed * 0.75 + 0.25);
 	pointerDelta.x = 0;
 	pointerDelta.y = 0;
@@ -1527,7 +1526,7 @@ function tick(width, height, simTime, simSpeed, lag) {
 	const pointerSpeed = Math.hypot(pointerDelta.x, pointerDelta.y);
 	const pointerSpeedScaled = pointerSpeed * forceMultiplier;
 
-	// Track points for later calculations, including drawing trail.
+	// Rastreia pontos para cálculos posteriores, incluindo trilha de desenho.
 	touchPoints.forEach(p => p.life -= simTime);
 
 	if (pointerIsDown) {
@@ -1543,8 +1542,8 @@ function tick(width, height, simTime, simSpeed, lag) {
 	}
 
 
-	// Entity Manipulation
-	// --------------------
+// Manipulação de entidade
+  // --------------------
 	PERF_START('entities');
 
 	// Spawn targets
@@ -1566,7 +1565,7 @@ function tick(width, height, simTime, simSpeed, lag) {
 		targets.push(target);
 	}
 
-	// Animate targets and remove when offscreen
+	// Anima os alvos e remove quando estiver fora da tela
 	const leftBound = -centerX + targetRadius;
 	const rightBound = centerX - targetRadius;
 	const ceiling = -centerY - 120;
@@ -1618,12 +1617,12 @@ function tick(width, height, simTime, simSpeed, lag) {
 		}
 
 
-		// If pointer is moving really fast, we want to hittest multiple points along the path.
-		// We can't use scaled pointer speed to determine this, since we care about actual screen
-		// distance covered.
+// Se o ponteiro estiver se movendo muito rápido, queremos atingir vários pontos ao longo do caminho.
+  // Não podemos usar a velocidade do ponteiro em escala para determinar isso, pois nos preocupamos com a tela real
+  // distância percorrida.
 		const hitTestCount = Math.ceil(pointerSpeed / targetRadius * 2);
-		// Start loop at `1` and use `<=` check, so we skip 0% and end up at 100%.
-		// This omits the previous point position, and includes the most recent.
+		// Inicia o loop em `1` e usa a verificação `<=`, então pulamos 0% e terminamos em 100%.
+  // Isto omite a posição do ponto anterior e inclui a mais recente.
 		for (let ii=1; ii<=hitTestCount; ii++) {
 			const percent = 1 - (ii / hitTestCount);
 			const hitX = pointerScene.x - pointerDelta.x * percent;
@@ -1634,7 +1633,7 @@ function tick(width, height, simTime, simSpeed, lag) {
 			);
 
 			if (distance <= targetHitRadius) {
-				// Hit! (though we don't want to allow hits on multiple sequential frames)
+				// Bater! (embora não queiramos permitir acessos em vários quadros sequenciais)
 				if (!target.hit) {
 					target.hit = true;
 
@@ -1670,19 +1669,19 @@ function tick(width, height, simTime, simSpeed, lag) {
 						sparkBurst(hitX, hitY, 3, sparkSpeed);
 					}
 				}
-				// Break the current loop and continue the outer loop.
-				// This skips to processing the next target.
+				// Interrompe o loop atual e continua o loop externo.
+  // Isso pula para o processamento do próximo alvo.
 				continue targetLoop;
 			}
 		}
 
-		// This code will only run if target hasn't been "hit".
+		// Este código só será executado se o alvo não tiver sido "acertado".
 		target.hit = false;
 	}
 
-	// Animate fragments and remove when offscreen.
+	// Anima fragmentos e remove quando estiver fora da tela.
 	const fragBackboardZ = backboardZ + fragRadius;
-	// Allow fragments to move off-screen to sides for a while, since shadows are still visible.
+	// Permitir que os fragmentos se movam para fora da tela e para os lados por um tempo, já que as sombras ainda são visíveis.
 	const fragLeftBound = -width;
 	const fragRightBound = width;
 
@@ -1713,14 +1712,14 @@ function tick(width, height, simTime, simSpeed, lag) {
 		frag.transform();
 		frag.project();
 
-		// Removal conditions
+		//Condições de remoção
 		if (
-			// Bottom of screen
+			// Parte inferior da tela
 			frag.projected.y > centerY + targetHitRadius ||
 			// Sides of screen
 			frag.projected.x < fragLeftBound ||
 			frag.projected.x > fragRightBound ||
-			// Too close to camera
+			// Muito perto da câmera // Muito perto da câmera
 			frag.z > cameraFadeEndZ
 		) {
 			frags.splice(i, 1);
@@ -1752,7 +1751,7 @@ function tick(width, height, simTime, simSpeed, lag) {
 
 	PERF_START('3D');
 
-	// Aggregate all scene vertices/polys
+	// Agrega todos os vértices/polis da cena
 	allVertices.length = 0;
 	allPolys.length = 0;
 	allShadowVertices.length = 0;
@@ -1771,12 +1770,12 @@ function tick(width, height, simTime, simSpeed, lag) {
 		allShadowPolys.push(...entity.shadowPolys);
 	});
 
-	// Scene calculations/transformations
+	// Cálculos/transformações de cena
 	allPolys.forEach(p => computePolyNormal(p, 'normalWorld'));
 	allPolys.forEach(computePolyDepth);
 	allPolys.sort((a, b) => b.depth - a.depth);
 
-	// Perspective projection
+	//Projeção em perspectiva
 	allVertices.forEach(projectVertex);
 
 	allPolys.forEach(p => computePolyNormal(p, 'normalCamera'));
@@ -1785,7 +1784,7 @@ function tick(width, height, simTime, simSpeed, lag) {
 
 	PERF_START('shadows');
 
-	// Rotate shadow vertices to light source perspective
+	// Gira os vértices da sombra para a perspectiva da fonte de luz
 	transformVertices(
 		allShadowVertices,
 		allShadowVertices,
@@ -1890,10 +1889,10 @@ function draw(ctx, width, height, viewScale) {
 			ctx.fillStyle = shadeColor(p.color, lightness);
 		}
 
-		// Fade out polys close to camera. `globalAlpha` must be reset later.
+		// Fade out polys perto da câmera. `globalAlpha` deve ser redefinido mais tarde.
 		if (fadeOut) {
-			// If polygon gets really close to camera (outside `cameraFadeRange`) the alpha
-			// can go negative, which has the appearance of alpha = 1. So, we'll clamp it at 0.
+			// Se o polígono chegar muito perto da câmera (fora de `cameraFadeRange`), o alfa
+  // pode ficar negativo, o que tem a aparência de alfa = 1. Então, vamos fixá-lo em 0.
 			ctx.globalAlpha = Math.max(0, 1 - (p.middle.z - cameraFadeStartZ) / cameraFadeRange);
 		}
 
@@ -1926,12 +1925,12 @@ function draw(ctx, width, height, viewScale) {
 	ctx.beginPath();
 	sparks.forEach(spark => {
 		ctx.moveTo(spark.x, spark.y);
-		// Shrink sparks to zero length as they die.
-		// Speed up shrinking as life approaches 0 (root curve).
-		// Note that sparks already get smaller over time as their speed slows
-		// down from damping. So this is like a double scale down. To counter this
-		// a bit and keep the sparks larger for longer, we'll also increase the scale
-		// a bit after applying the root curve.
+		// Reduz as faíscas para comprimento zero à medida que morrem.
+  // Acelera o encolhimento conforme a vida se aproxima de 0 (curva raiz).
+  // Observe que as faíscas já ficam menores com o tempo à medida que sua velocidade diminui
+  // abaixo do amortecimento. Então isso é como uma redução dupla. Para combater isso
+  // um pouco e manteremos as faíscas maiores por mais tempo, também aumentaremos a escala
+  // um pouco depois de aplicar a curva raiz.
 		const scale = (spark.life / spark.maxLife) ** 0.5 * 1.5;
 		ctx.lineTo(spark.x - spark.xD*scale, spark.y - spark.yD*scale);
 
@@ -1963,7 +1962,7 @@ function draw(ctx, width, height, viewScale) {
 	PERF_END('draw');
 	PERF_END('frame');
 
-	// Display performance updates.
+	// Exibir atualizações de desempenho.
 	PERF_UPDATE();
 }
 
@@ -1977,11 +1976,11 @@ function draw(ctx, width, height, viewScale) {
 
 function setupCanvases() {
 	const ctx = canvas.getContext('2d');
-	// devicePixelRatio alias
+	// alias devicePixelRatio
 	const dpr = window.devicePixelRatio || 1;
-	// View will be scaled so objects appear sized similarly on all screen sizes.
+	// A visualização será dimensionada para que os objetos apareçam com tamanhos semelhantes em todos os tamanhos de tela.
 	let viewScale;
-	// Dimensions (taking viewScale into account!)
+	// Dimensões (levando em consideração viewScale!)
 	let width, height;
 
 	function handleResize() {
@@ -1996,30 +1995,30 @@ function setupCanvases() {
 		canvas.style.height = h + 'px';
 	}
 
-	// Set initial size
+	// Define o tamanho inicial
 	handleResize();
-	// resize fullscreen canvas
+	// redimensiona a tela em tela cheia
 	window.addEventListener('resize', handleResize);
 
 
-	// Run game loop
+	//Executa o loop do jogo
 	let lastTimestamp = 0;
 	function frameHandler(timestamp) {
 		let frameTime = timestamp - lastTimestamp;
 		lastTimestamp = timestamp;
 
-		// always queue another frame
+		// sempre enfileira outro quadro
 		raf();
 
-		// If game is paused, we'll still track frameTime (above) but all other
-		// game logic and drawing can be avoided.
+		// Se o jogo estiver pausado, ainda rastrearemos o frameTime (acima), mas todos os outros
+  // lógica e desenho do jogo podem ser evitados.
 		if (isPaused()) return;
 
-		// make sure negative time isn't reported (first frame can be whacky)
+		// certifique-se de que o tempo negativo não seja relatado (o primeiro quadro pode ser maluco)
 		if (frameTime < 0) {
 			frameTime = 17;
 		}
-		// - cap minimum framerate to 15fps[~68ms] (assuming 60fps[~17ms] as 'normal')
+		// - limita a taxa de quadros mínima para 15fps[~68ms] (assumindo 60fps[~17ms] como 'normal')
 		else if (frameTime > 68) {
 			frameTime = 68;
 		}
@@ -2027,7 +2026,7 @@ function setupCanvases() {
 		const halfW = width / 2;
 		const halfH = height / 2;
 
-		// Convert pointer position from screen to scene coords.
+		// Converte a posição do ponteiro da tela para as coordenadas da cena.
 		pointerScene.x = pointerScreen.x / viewScale - halfW;
 		pointerScene.y = pointerScreen.y / viewScale - halfH;
 
@@ -2036,11 +2035,11 @@ function setupCanvases() {
 		const simSpeed = gameSpeed * lag;
 		tick(width, height, simTime, simSpeed, lag);
 
-		// Auto clear canvas
+	// Tela de limpeza automática
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
-		// Auto scale drawing for high res displays, and incorporate `viewScale`.
-		// Also shift canvas so (0, 0) is the middle of the screen.
-		// This just works with 3D perspective projection.
+		// Desenho em escala automática para telas de alta resolução e incorpora `viewScale`.
+  // Também muda a tela para que (0, 0) fique no meio da tela.
+  // Isso só funciona com projeção em perspectiva 3D.
 		const drawScale = dpr * viewScale;
 		ctx.scale(drawScale, drawScale);
 		ctx.translate(halfW, halfH);
@@ -2068,8 +2067,8 @@ function handleCanvasPointerDown(x, y) {
 		pointerIsDown = true;
 		pointerScreen.x = x;
 		pointerScreen.y = y;
-		// On when menus are open, point down/up toggles an interactive mode.
-		// We just need to rerender the menu system for it to respond.
+		// Ativado quando os menus estão abertos, apontar para baixo/para cima alterna um modo interativo.
+  // Precisamos apenas renderizar novamente o sistema de menu para que ele responda.
 		if (isMenuVisible()) renderMenus();
 	}
 }
@@ -2081,8 +2080,8 @@ function handleCanvasPointerUp() {
 			touchBreak: true,
 			life: touchPointLife
 		});
-		// On when menus are open, point down/up toggles an interactive mode.
-		// We just need to rerender the menu system for it to respond.
+		// Ativado quando os menus estão abertos, apontar para baixo/para cima alterna um modo interativo.
+  // Precisamos apenas renderizar novamente o sistema de menu para que ele responda.
 		if (isMenuVisible()) renderMenus();
 	}
 }
@@ -2095,7 +2094,7 @@ function handleCanvasPointerMove(x, y) {
 }
 
 
-// Use pointer events if available, otherwise fallback to touch events (for iOS).
+// Use eventos de ponteiro se disponíveis, caso contrário, use eventos de toque (para iOS).
 if ('PointerEvent' in window) {
 	canvas.addEventListener('pointerdown', event => {
 		event.isPrimary && handleCanvasPointerDown(event.clientX, event.clientY);
@@ -2109,8 +2108,8 @@ if ('PointerEvent' in window) {
 		event.isPrimary && handleCanvasPointerMove(event.clientX, event.clientY);
 	});
 
-	// We also need to know if the mouse leaves the page. For this game, it's best if that
-	// cancels a swipe, so essentially acts as a "mouseup" event.
+	// Também precisamos saber se o mouse sai da página. Para este jogo, é melhor que isso
+  // cancela um deslizar, portanto atua essencialmente como um evento "mouseup".
 	document.body.addEventListener('mouseleave', handleCanvasPointerUp);
 } else {
 	let activeTouchId = null;
